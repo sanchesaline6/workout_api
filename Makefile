@@ -6,3 +6,5 @@ create-migrations:
 
 run-migrations:
 	@PYTHONPATH=$PYTHONPATH:$(pwd) alembic upgrade head
+run-docker:
+	@PYTHONPATH=$PYTHONPATH:$(pwd) docker-compose docker-compose.yml up

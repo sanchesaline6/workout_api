@@ -67,9 +67,9 @@ async def post(
     '/', 
     summary='Consultar todos os Atletas',
     status_code=status.HTTP_200_OK,
-    response_model=list[AtletaOut],
+    response_model="list[AtletaOut]",
 )
-async def query(db_session: DatabaseDependency) -> list[AtletaOut]:
+async def query(db_session: DatabaseDependency) -> "list[AtletaOut]":
     atletas: list[AtletaOut] = (await db_session.execute(select(AtletaModel))).scalars().all()
     
     return [AtletaOut.model_validate(atleta) for atleta in atletas]
@@ -86,6 +86,32 @@ async def get(id: UUID4, db_session: DatabaseDependency) -> AtletaOut:
         await db_session.execute(select(AtletaModel).filter_by(id=id))
     ).scalars().first()
 
+    if not atleta:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail=f'Atleta não encontrado no id: {id}'
+        )
+    
+    return atleta
+
+
+@router.get(
+    "/atletas/",
+    summary='Consulta um pelo cpf ou nome',
+    status_code=status.HTTP_200_OK,
+    response_model=AtletaOut,
+)
+async def get(db_session: DatabaseDependency, nome: str, cpf: str | None = None) -> AtletaOut:
+    if nome:
+        atleta: AtletaOut = (
+        await db_session.execute(select(AtletaModel).filter_by(nome=nome))
+    ).scalars().first()
+
+    if cpf:
+        atleta: AtletaOut = (
+        await db_session.execute(select(AtletaModel).filter_by(cpf=cpf))
+    ).scalars().first()
+        
     if not atleta:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
